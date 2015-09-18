@@ -96,7 +96,7 @@ void setup () {
   Serial.println();
 }
 
-static word homePage(float temp1, float temp2) {
+static word homePage(int temp1, int temp2) {
   bfill = ether.tcpOffset();
   bfill.emit_p(PSTR(
                  "HTTP/1.0 200 OK\r\n"
@@ -109,14 +109,14 @@ static word homePage(float temp1, float temp2) {
   return bfill.position();
 }
 
-static word homePageJSON(float temp1, float temp2) {
+static word homePageJSON(int temp1, int temp2) {
   bfill = ether.tcpOffset();
   bfill.emit_p(PSTR(
                  "HTTP/1.0 200 OK\r\n"
                  "Content-Type: application/json\r\n"
                  "Pragma: no-cache\r\n"
                  "\r\n"
-                 "{\"temp1\":$D,\"temp1\":$D}"),
+                 "{\"temp1\":$D,\"temp2\":$D}"),
                temp1, temp2);
   return bfill.position();
 }
@@ -166,9 +166,9 @@ void printData(DeviceAddress deviceAddress)
 }
 
 void loop () {
-  word len = ether.packetReceive();
-  word pos = ether.packetLoop(len);
-
+ word len = ether.packetReceive();
+ word pos = ether.packetLoop(len);
+//delay(1000);
   if (pos) //check if valid tcp data is received
   {
     char* data = (char *) Ethernet::buffer + pos;
@@ -196,11 +196,12 @@ void loop () {
     temp1 = sensors.getTempC(insideThermometer);
     temp2 = sensors.getTempC(outsideThermometer);
 
+    temp1 = (int) (temp1*100);
+    temp2 = (int) (temp2*100);
     if (value.startsWith("json"))
       ether.httpServerReply(homePageJSON(temp1, temp2));
     else
       ether.httpServerReply(homePage(temp1, temp2));
   }
 }
-
 
